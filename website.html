@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clash Royale API Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 2px solid #ffde59;
+        }
+        
+        h1 {
+            color: #ffde59;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .tag-input-section {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        label {
+            font-weight: bold;
+            color: #ffde59;
+            font-size: 1.1rem;
+        }
+        
+        input {
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #444;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #ffde59;
+            box-shadow: 0 0 10px rgba(255, 222, 89, 0.3);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ffde59 0%, #ffb347 100%);
+            color: #1a1a2e;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 222, 89, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+        
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.1);
+            border-top: 5px solid #ffde59;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            border-color: #ffde59;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h3 {
+            color: #ffde59;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid rgba(255, 222, 89, 0.3);
+            padding-bottom: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+        
+        .clan-badge {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .error {
+            background: rgba(255, 50, 50, 0.1);
+            border: 2px solid #ff3232;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .trophies {
+            color: gold;
+            font-size: 1.3rem;
+            text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+        }
+        
+        .clan-info {
+            background: rgba(255, 222, 89, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .results {
+                grid-template-columns: 1fr;
+            }
+            
+            button {
+                min-width: 100%;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Clash Royale API Dashboard</h1>
+            <p>Zoek spelers en clans met de officiële Clash Royale API</p>
+        </header>
+        
+        <section class="tag-input-section">
+            <div class="input-group">
+                <label for="playerTag">Player Tag (bijv. #P0LY0URCR)</label>
+                <input type="text" id="playerTag" placeholder="Voer player tag in (zonder #)">
+                
+                <label for="clanTag">Clan Tag (optioneel)</label>
+                <input type="text" id="clanTag" placeholder="Voer clan tag in (zonder #)">
+                
+                <div class="buttons">
+                    <button id="getPlayerBtn">Speler informatie ophalen</button>
+                    <button id="getClanBtn">Clan informatie ophalen</button>
+                    <button id="getTopPlayersBtn">Top spelers weergeven</button>
+                    <button id="getTopClansBtn">Top clans weergeven</button>
+                </div>
+            </div>
+        </section>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Gegevens worden opgehaald...</p>
+        </div>
+        
+        <div class="error" id="error"></div>
+        
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        // JWT Token voor Clash Royale API
+        const API_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiIsImtpZCI6IjI4YTMxOGY3LTAwMDAtYTFlYi03ZmExLTJjNzQzM2M2Y2NhNSJ9.eyJpc3MiOiJzdXBlcmNlbGwiLCJhdWQiOiJzdXBlcmNlbGw6Z2FtZWFwaSIsImp0aSI6IjJhNjkwN2Y2LTQyYzktNGY1MC1hMDYzLWYyMDA3NWRmZmI2OSIsImlhdCI6MTc2NTQ5NTAwMiwic3ViIjoiZGV2ZWxvcGVyL2ZiMWM1MGYzLWU2ZmYtMGJhZi0wNGNhLTg5MDI0MmRjNDE0NyIsInNjb3BlcyI6WyJyb3lhbGUiXSwibGltaXRzIjpbeyJ0aWVyIjoiZGV2ZWxvcGVyL3NpbHZlciIsInR5cGUiOiJ0aHJvdHRsaW5nIn0seyJjaWRycyI6WyI2Mi4xOTQuMjQyLjIwNiJdLCJ0eXBlIjoiY2xpZW50In1dfQ.WN5olcN2PmFZmDscieOvleIf67aq-77EHEwIU8eafsaAzkQ_ZAeoMLHr9qxHGZ0Qh1XCZnU5dkzJiEStCwdJwQ';
+        
+        // API basis URL
+        const API_BASE_URL = 'https://api.clashroyale.com/v1';
+        
+        // DOM elementen
+        const playerTagInput = document.getElementById('playerTag');
+        const clanTagInput = document.getElementById('clanTag');
+        const getPlayerBtn = document.getElementById('getPlayerBtn');
+        const getClanBtn = document.getElementById('getClanBtn');
+        const getTopPlayersBtn = document.getElementById('getTopPlayersBtn');
+        const getTopClansBtn = document.getElementById('getTopClansBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        
+        // Hulpfunctie om API calls te maken
+        async function makeApiCall(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                    headers: {
+                        'Authorization': `Bearer ${API_TOKEN}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API fout: ${response.status}`);
+                }
+                
+                return await response.json();
+            } catch (err) {
+                throw err;
+            }
+        }
+        
+        // Hulpfunctie om tag te formatteren
+        function formatTag(tag) {
+            return tag.startsWith('#') ? tag : `#${tag}`;
+        }
+        
+        // Hulpfunctie om fouten te tonen
+        function showError(message) {
+            error.textContent = `Fout: ${message}`;
+            error.style.display = 'block';
+            setTimeout(() => {
+                error.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Speler informatie ophalen
+        async function getPlayerInfo() {
+            const playerTag = playerTagInput.value.trim();
+            if (!playerTag) {
+                showError('Voer een player tag in');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            results.innerHTML = '';
+            
+            try {
+                const data = await makeApiCall(`/players/${encodeURIComponent(formatTag(playerTag))}`);
+                displayPlayerInfo(data);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Clan informatie ophalen
+        async function getClanInfo() {
+            const clanTag = clanTagInput.value.trim();
+            if (!clanTag) {
+                showError('Voer een clan tag in');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            results.innerHTML = '';
+            
+            try {
+                const data = await makeApiCall(`/clans/${encodeURIComponent(formatTag(clanTag))}`);
+                displayClanInfo(data);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Top spelers ophalen
+        async function getTopPlayers() {
+            loading.style.display = 'block';
+            results.innerHTML = '';
+            
+            try {
+                const data = await makeApiCall('/locations/global/rankings/players?limit=10');
+                displayTopPlayers(data);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Top clans ophalen
+        async function getTopClans() {
+            loading.style.display = 'block';
+            results.innerHTML = '';
+            
+            try {
+                const data = await makeApiCall('/locations/global/rankings/clans?limit=10');
+                displayTopClans(data);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+        
+        // Speler informatie weergeven
+        function displayPlayerInfo(player) {
+            results.innerHTML = `
+                <div class="card">
+                    <h3>${player.name} ${player.tag}</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Trofeeën</span>
+                            <span class="info-value trophies">🏆 ${player.trophies}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Hoogste trofeeën</span>
+                            <span class="info-value">🏆 ${player.bestTrophies}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Level</span>
+                            <span class="info-value">⭐ ${player.expLevel}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Overwinningen</span>
+                            <span class="info-value">🎯 ${player.wins}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Verliezen</span>
+                            <span class="info-value">💔 ${player.losses}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Gelijk spel</span>
+                            <span class="info-value">🤝 ${player.battleCount - player.wins - player.losses}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Totaal gevechten</span>
+                            <span class="info-value">⚔️ ${player.battleCount}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Three Crown Wins</span>
+                            <span class="info-value">👑 ${player.threeCrownWins}</span>
+                        </div>
+                    </div>
+                    ${player.clan ? `
+                    <div class="clan-info">
+                        <h4>Clan: ${player.clan.name}</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Clan Tag</span>
+                                <span class="info-value">${player.clan.tag}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Clan Level</span>
+                                <span class="info-value">${player.clan.clanLevel}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Clan Rol</span>
+                                <span class="info-value">${player.role}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        // Clan informatie weergeven
+        function displayClanInfo(clan) {
+            const badge = clan.badgeId ? clan.badgeId.toString() : '🏰';
+            
+            results.innerHTML = `
+                <div class="card">
+                    <h3>${clan.name}</h3>
+                    <div class="clan-badge">${badge}</div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Tag</span>
+                            <span class="info-value">${clan.tag}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Beschrijving</span>
+                            <span class="info-value">${clan.description || 'Geen beschrijving'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Type</span>
+                            <span class="info-value">${clan.type}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Score</span>
+                            <span class="info-value trophies">🏆 ${clan.clanScore}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Members</span>
+                            <span class="info-value">👥 ${clan.members}/50</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Required Trophies</span>
+                            <span class="info-value">🎯 ${clan.requiredTrophies}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Donaties per week</span>
+                            <span class="info-value">🎁 ${clan.donationsPerWeek}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Clan Wars Wins</span>
+                            <span class="info-value">⚔️ ${clan.clanWarTrophies || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Top spelers weergeven
+        function displayTopPlayers(data) {
+            const players = data.items || [];
+            
+            if (players.length === 0) {
+                results.innerHTML = '<div class="card"><h3>Geen spelers gevonden</h3></div>';
+                return;
+            }
+            
+            results.innerHTML = players.map((player, index) => `
+                <div class="card">
+                    <h3>#${index + 1} ${player.name}</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Tag</span>
+                            <span class="info-value">${player.tag}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Trofeeën</span>
+                            <span class="info-value trophies">🏆 ${player.trophies}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Level</span>
+                            <span class="info-value">⭐ ${player.expLevel}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Rank</span>
+                            <span class="info-value">#${player.rank}</span>
+                        </div>
+                        ${player.clan ? `
+                        <div class="info-item">
+                            <span class="info-label">Clan</span>
+                            <span class="info-value">${player.clan.name}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Top clans weergeven
+        function displayTopClans(data) {
+            const clans = data.items || [];
+            
+            if (clans.length === 0) {
+                results.innerHTML = '<div class="card"><h3>Geen clans gevonden</h3></div>';
+                return;
+            }
+            
+            results.innerHTML = clans.map((clan, index) => `
+                <div class="card">
+                    <h3>#${index + 1} ${clan.name}</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Tag</span>
+                            <span class="info-value">${clan.tag}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Score</span>
+                            <span class="info-value trophies">🏆 ${clan.clanScore}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Members</span>
+                            <span class="info-value">👥 ${clan.members}/50</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Rank</span>
+                            <span class="info-value">#${clan.rank}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Location</span>
+                            <span class="info-value">🌍 ${clan.location.name}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Event listeners
+        getPlayerBtn.addEventListener('click', getPlayerInfo);
+        getClanBtn.addEventListener('click', getClanInfo);
+        getTopPlayersBtn.addEventListener('click', getTopPlayers);
+        getTopClansBtn.addEventListener('click', getTopClans);
+        
+        // Enter toets ondersteuning voor input velden
+        playerTagInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') getPlayerInfo();
+        });
+        
+        clanTagInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') getClanInfo();
+        });
+        
+        // Toon initiële melding
+        results.innerHTML = `
+            <div class="card">
+                <h3>Welkom bij Clash Royale API Dashboard</h3>
+                <p>Gebruik de knoppen hierboven om:</p>
+                <ul style="margin-top: 15px; padding-left: 20px;">
+                    <li>Speler informatie op te halen</li>
+                    <li>Clan informatie te bekijken</li>
+                    <li>Top spelers wereldwijd te zien</li>
+                    <li>Top clans te bekijken</li>
+                </ul>
+                <p style="margin-top: 15px; color: #ffde59;">Voer tags in zonder het # teken</p>
+            </div>
+        `;
+    </script>
+</body>
+</html>
